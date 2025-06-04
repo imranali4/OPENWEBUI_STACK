@@ -1,4 +1,4 @@
-# OPENWEBUI_STACK - Comprehensive AI Stack
+# OPENWEBUI_STACK - Comprehensive AI Stack MAC M1
 
 This repository contains a full AI stack orchestrated with Docker Compose, featuring:
 *   **Open WebUI:** A user-friendly interface for your LLM interactions.
@@ -24,8 +24,9 @@ Follow these steps to set up and run the full AI stack on your machine.
 
 ### Project Structure
 
-```
+
 After cloning, your project directory (`OPENWEBUI_STACK`) will have the following structure:
+```
 OPENWEBUI_STACK/ 
 ├── docker-compose.yml # The main Docker Compose orchestration file 
 ├── hybridreranker/ # Contains Dockerfile and code for the custom reranker 
@@ -105,14 +106,6 @@ Once the services are up and running, you can access them via your web browser:
     *   Accessible at: `http://localhost:8999`
 *   **TTS Piper (Text-to-Speech):** (Primarily for internal use)
     *   Accessible at: `http://localhost:8000`
-    **ComfyUI Integration:** This stack automatically configures Open WebUI to connect to the included ComfyUI service for image generation.
-        *   To use ComfyUI from Open WebUI, navigate to **Settings (gear icon) > Image Generation (Experimental)**.
-        *   You will find `ComfyUI` pre-selected as the **Image Generation Engine**.
-        *   **Important: You must upload a `workflow.json` file as API format** via the "ComfyUI Workflow" section in Open WebUI's settings. You can export an example workflow from ComfyUI itself (e.g., from `http://localhost:8188`) by selecting `Save (API Format)` from the `Save` menu.
-        *   Once a workflow is uploaded, you can then configure the specific node IDs and parameters (Prompt, Model, Width, Height, etc.) directly in Open WebUI's settings.
-*   **ComfyUI (Stable Diffusion UI):**
-    *   Go to: `http://localhost:8188`
-    *   You can directly access ComfyUI's web interface here to load workflows, generate images, and manage models. Remember to place your large Stable Diffusion models (checkpoints, Loras, VAEs, etc.) into the `OPENWEBUI_STACK/comfyui/models` directory on your host machine before starting the stack.
 
 ### Step 5: Stop the Services
 
