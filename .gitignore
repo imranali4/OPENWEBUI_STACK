@@ -12,3 +12,6 @@ comfyui/models/
 comfyui/input/
 comfyui/custom_nodes/
 comfyui/README_SETUP.pdf
+
+# Exclude ComfyUI folder from Git tracking (working on it locally)
+comfyui/
