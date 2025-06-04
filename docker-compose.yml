@@ -1,0 +1,155 @@
+version: '3.8'
+
+# Define top-level networks
+networks:
+  app-network:
+    driver: bridge
+
+# Define top-level volumes
+# Docker Compose will create these automatically if they don't exist when you run 'docker compose up'
+volumes:
+  open-webui: {}
+  searxng-docker_caddy-config: {}
+  searxng-docker_caddy-data: {}
+  searxng-docker_valkey-data2: {}
+
+# Define services
+services:
+  # --- 1. Open WebUI Service ---
+  open-webui:
+    container_name: open-webui
+    image: ghcr.io/open-webui/open-webui:main
+    platform: linux/arm64
+    restart: always
+    environment:
+      # Remember to define OPENAI_API_KEY in a .env file or your shell
+      - OPENAI_API_BASE_URL=http://host.docker.internal:1234/v1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - WEBUI_SEARCH_ENGINE_URL=http://searxng-caddy:8080/search?q=<query>
+      - WEBUI_VECTOR_STORE=qdrant
+      - HOST_GATEWAY_IP=host.docker.internal
+      # --- NEW: ComfyUI Integration Settings ---
+      - WEBUI_IMAGE_GENERATION_ENABLED=true
+      - WEBUI_IMAGE_GENERATION_ENGINE=ComfyUI
+      - WEBUI_IMAGE_GENERATION_COMFYUI_URL=http://comfyui:8188 # ComfyUI is reachable via its service name + port
+    # - WEBUI_IMAGE_GENERATION_COMFYUI_API_KEY=${COMFYUI_API_KEY} # Uncomment and define COMFYUI_API_KEY in .env if ComfyUI needs an API key
+    volumes:
+      - open-webui:/app/backend/data
+      - ./my_custom_tools:/app/backend/tools # For custom tool scripts (e.g., pipes)
+    ports:
+      - "3000:8080"
+    networks:
+      - app-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Allows access to services on the Docker host
+    depends_on:
+      - searxng-caddy
+
+  # --- 2. Tika Content Extraction Service ---
+  tika:
+    container_name: tika
+    image: apache/tika:latest-full
+    platform: linux/arm64
+    restart: always
+    ports:
+      - "9998:9998"
+    networks:
+      - app-network
+
+  # --- 3. Hybrid Reranker Service ---
+  hybridreranker:
+    container_name: hybridreranker
+    # This tells Docker Compose to build the 're-ranker:latest' image
+    # from the Dockerfile located in the 'hybridreranker' directory.
+    build:
+      context: ./hybridreranker # Points to the directory containing your Dockerfile
+      dockerfile: Dockerfile    # Specifies the Dockerfile name (default is Dockerfile)
+    image: re-ranker:latest # This specifies the name of the image that will be built and used
+    platform: linux/arm64
+    restart: always
+    ports:
+      - "8999:8999"
+    networks:
+      - app-network
+
+  # --- 4. TTS Piper Model Service ---
+  tts-piper:
+    container_name: openedai-speech
+    image: ghcr.io/matatonic/openedai-speech-min:latest
+    platform: linux/arm64
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      # These now expect 'openedai-speech' directory to be alongside your docker-compose.yml
+      - ./openedai-speech/voices:/app/voices
+      - ./openedai-speech/config:/app/config
+    networks:
+      - app-network
+
+  # --- 5. SearXNG Search Engine (and its dependencies) ---
+  searxng:
+    container_name: searxng
+    image: searxng/searxng:latest
+    platform: linux/arm64
+    restart: always
+    environment:
+      - SEARXNG_HOSTNAME=searxng-caddy
+      - SEARXNG_BASE_URL=/
+    volumes:
+      # This now expects 'searxng-docker' directory to be alongside your docker-compose.yml
+      - ./searxng-docker/searxng:/etc/searxng:rw
+    networks:
+      - app-network
+    depends_on:
+      - searxng-redis
+
+  searxng-caddy:
+    container_name: searxng-caddy
+    image: caddy:2-alpine
+    platform: linux/arm64
+    restart: always
+    volumes:
+      - searxng-docker_caddy-config:/config
+      - searxng-docker_caddy-data:/data
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    command: caddy reverse-proxy --from :8080 --to searxng:8080
+    depends_on:
+      - searxng
+
+  searxng-redis:
+    container_name: searxng-redis
+    platform: linux/arm64
+    image: valkey/valkey:8-alpine
+    restart: always
+    volumes:
+      - searxng-docker_valkey-data2:/data
+    networks:
+      - app-network
+
+# --- 6. ComfyUI Service (Stable Diffusion UI) ---
+comfyui:
+  container_name: comfyui
+  build:
+    context: ./comfyui # Tells Docker Compose to build from your local comfyui folder
+    dockerfile: Dockerfile # Points to the Dockerfile we'll create in comfyui/
+  image: comfyui:latest # Name of the image that will be built
+  platform: linux/arm64 # Or your appropriate platform
+  restart: always
+  ports:
+    - "8188:8188" # Expose ComfyUI's default port
+  volumes:
+    # Bind mount for generated images to be accessible on host
+    - ./comfyui/output:/app/ComfyUI/output
+    # Bind mount for all models (checkpoints, loras, vae, upscalers, etc.)
+    # Users will place their models in OPENWEBUI_STACK/comfyui/models on their host
+    - ./comfyui/models:/app/ComfyUI/models
+    # Bind mount for custom nodes (if you want to manage them on host)
+    - ./comfyui/custom_nodes:/app/ComfyUI/custom_nodes
+    # Bind mount for input images (if you feed images from host to ComfyUI)
+    - ./comfyui/input:/app/ComfyUI/input
+  networks:
+    - app-network # Connects to your main app network

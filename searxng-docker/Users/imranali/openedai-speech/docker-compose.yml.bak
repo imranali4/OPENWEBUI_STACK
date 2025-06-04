@@ -1,0 +1,14 @@
+services:
+  server:
+    build:
+      dockerfile: Dockerfile
+    image: ghcr.io/matatonic/openedai-speech
+    env_file: speech.env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./voices:/app/voices
+      - ./config:/app/config
+    # To install as a service
+    restart: unless-stopped
+    # Removed deploy section to disable GPU requirements

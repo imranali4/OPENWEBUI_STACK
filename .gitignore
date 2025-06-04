@@ -1,0 +1,14 @@
+.env
+venv/
+.venv/
+*.DS_Store
+*.log
+.ipynb_checkpoints/
+__pycache__/
+
+# ComfyUI related ignores
+comfyui/output/
+comfyui/models/
+comfyui/input/
+comfyui/custom_nodes/
+comfyui/README_SETUP.pdf
