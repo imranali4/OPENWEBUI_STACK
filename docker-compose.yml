@@ -29,9 +29,9 @@ services:
       - WEBUI_VECTOR_STORE=qdrant
       - HOST_GATEWAY_IP=host.docker.internal
       # --- NEW: ComfyUI Integration Settings ---
-      - WEBUI_IMAGE_GENERATION_ENABLED=true
-      - WEBUI_IMAGE_GENERATION_ENGINE=ComfyUI
-      - WEBUI_IMAGE_GENERATION_COMFYUI_URL=http://comfyui:8188 # ComfyUI is reachable via its service name + port
+    #  - WEBUI_IMAGE_GENERATION_ENABLED=true
+    #  - WEBUI_IMAGE_GENERATION_ENGINE=ComfyUI
+    # - WEBUI_IMAGE_GENERATION_COMFYUI_URL=http://comfyui:8188 # ComfyUI is reachable via its service name + port
     # - WEBUI_IMAGE_GENERATION_COMFYUI_API_KEY=${COMFYUI_API_KEY} # Uncomment and define COMFYUI_API_KEY in .env if ComfyUI needs an API key
     volumes:
       - open-webui:/app/backend/data
@@ -131,25 +131,25 @@ services:
       - app-network
 
 # --- 6. ComfyUI Service (Stable Diffusion UI) ---
-comfyui:
-  container_name: comfyui
-  build:
-    context: ./comfyui # Tells Docker Compose to build from your local comfyui folder
-    dockerfile: Dockerfile # Points to the Dockerfile we'll create in comfyui/
-  image: comfyui:latest # Name of the image that will be built
-  platform: linux/arm64 # Or your appropriate platform
-  restart: always
-  ports:
-    - "8188:8188" # Expose ComfyUI's default port
-  volumes:
+#comfyui:
+ # container_name: comfyui
+  #build:
+   # context: ./comfyui # Tells Docker Compose to build from your local comfyui folder
+    #dockerfile: Dockerfile # Points to the Dockerfile we'll create in comfyui/
+ # image: comfyui:latest # Name of the image that will be built
+ # platform: linux/arm64 # Or your appropriate platform
+ # restart: always
+ # ports:
+   # - "8188:8188" # Expose ComfyUI's default port
+ # volumes:
     # Bind mount for generated images to be accessible on host
-    - ./comfyui/output:/app/ComfyUI/output
+   # - ./comfyui/output:/app/ComfyUI/output
     # Bind mount for all models (checkpoints, loras, vae, upscalers, etc.)
     # Users will place their models in OPENWEBUI_STACK/comfyui/models on their host
-    - ./comfyui/models:/app/ComfyUI/models
+   # - ./comfyui/models:/app/ComfyUI/models
     # Bind mount for custom nodes (if you want to manage them on host)
-    - ./comfyui/custom_nodes:/app/ComfyUI/custom_nodes
+   # - ./comfyui/custom_nodes:/app/ComfyUI/custom_nodes
     # Bind mount for input images (if you feed images from host to ComfyUI)
-    - ./comfyui/input:/app/ComfyUI/input
-  networks:
-    - app-network # Connects to your main app network
+   # - ./comfyui/input:/app/ComfyUI/input
+ # networks:
+   # - app-network # Connects to your main app network
