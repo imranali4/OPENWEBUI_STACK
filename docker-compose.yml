@@ -150,3 +150,28 @@ services:
    networks:
     - app-network # Connects to your main app network
 
+   # --- 7. ComfyUI Service (Stable Diffusion UI) ---
+  comfyui:
+   container_name: comfyui
+   build:
+    context: ./comfyui # Tells Docker Compose to build from your local comfyui folder
+    dockerfile: Dockerfile # Points to the Dockerfile we'll create in comfyui/
+   image: comfyui:latest # Name of the image that will be built
+   platform: linux/arm64 # Assuming your M1 Mac needs arm64 for ComfyUI
+   restart: always
+   ports:
+    - "8188:8188" # Expose ComfyUI's default UI port
+   volumes:
+    # Bind mount for generated images to be accessible on host.
+    # Docker will create this folder if it doesn't exist on the host.
+    - ./comfyui/output:/app/ComfyUI/output
+    # Bind mount for all models (checkpoints, loras, vae, upscalers, etc.)
+    # Users will place their models in OPENWEBUI_STACK/comfyui/models on their host.
+    - ./comfyui/models:/app/ComfyUI/models
+    # Bind mount for custom nodes (if you manage them on host outside of the Git repo)
+    - ./comfyui/custom_nodes:/app/ComfyUI/custom_nodes
+    # Bind mount for input images (if you feed images from host to ComfyUI)
+    - ./comfyui/input:/app/ComfyUI/input
+   networks:
+    - app-network # Connects to your main app network
+
