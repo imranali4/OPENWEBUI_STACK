@@ -28,7 +28,8 @@ Follow these steps to set up and run the full AI and automation stack on your ma
 After cloning, your project directory (`OPENWEBUI_STACK`) will have the following structure:
 
 OPENWEBUI_STACK/ 
-├── docker-compose.yml # The main Docker Compose orchestration file 
+```
+├── docker-compose.yml # The main Docker Compose orchestration file
 ├── hybridreranker/ # Contains Dockerfile and code for the custom reranker 
  ├── Dockerfile  
  ├── inference.py  
@@ -42,7 +43,7 @@ OPENWEBUI_STACK/
 ├── .env.example # Template for environment variables (e.g., API keys) 
 ├── .gitignore # Specifies files/folders Git should ignore 
 └── README.md # This guide!
-
+```
 
 ---
 
