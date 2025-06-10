@@ -15,3 +15,4 @@ comfyui/README_SETUP.pdf
 
 # Exclude ComfyUI folder from Git tracking (working on it locally)
 comfyui/
+my_custom_tools/

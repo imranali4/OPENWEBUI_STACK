@@ -30,32 +30,15 @@ After cloning, your project directory (`OPENWEBUI_STACK`) will have the followin
 OPENWEBUI_STACK/ 
 ├── docker-compose.yml # The main Docker Compose orchestration file 
 ├── hybridreranker/ # Contains Dockerfile and code for the custom reranker 
-│ 
-├── Dockerfile 
-│ 
-├── inference.py 
-│ 
-└── requirements.txt 
-├── my_custom_tools/ # Custom tool scripts for Open WebUI 
-│ 
-└── example_tool.py 
-├── openedai-speech/ # Configuration and voice models for TTS Piper 
-│ 
-├── config/ 
-│ 
-│ 
-└── ... 
-│ 
-└── voices/ 
-│ 
-└── ... 
+ ├── Dockerfile  
+ ├── inference.py  
+ └── requirements.txt 
+├── openedai-speech/ # Configuration and voice models for TTS Piper  
+ ├── config/  
+ └── voices/  
 ├── searxng-docker/ # Configuration for SearXNG 
-│ 
-└── searxng/ 
-│ 
-└── settings.yml 
-│ 
-└── ... 
+ └── searxng/  
+ └── settings.yml 
 ├── .env.example # Template for environment variables (e.g., API keys) 
 ├── .gitignore # Specifies files/folders Git should ignore 
 └── README.md # This guide!
