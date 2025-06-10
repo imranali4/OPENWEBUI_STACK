@@ -19,8 +19,8 @@ COPY requirements.txt .
 # Install PyTorch, torchvision, torchaudio with MPS (Metal) support for Apple Silicon.
 # This is critical for leveraging your M1's GPU.
 # Confirmed PyTorch version 2.7.0 from your pip list.
-RUN pip install --no-cache-dir \
-    torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/mps
+
+RUN pip install torch torchvision
 
 # Install other Python dependencies from requirements.txt
 # (Excludes torch/torchvision/torchaudio as they are installed above)
@@ -31,7 +31,7 @@ RUN pip install --no-cache-dir --ignore-installed -r requirements.txt
 # Install xformers (often an optional but highly recommended performance dependency for stable diffusion)
 # Check if xformers has an MPS wheel, if not, CPU will be used or it might fail if not compatible.
 # For now, we'll try a generic installation.
-RUN pip install --no-cache-dir xformers
+RUN pip install xformers 
 
 # Copy the rest of ComfyUI source code into the container
 # This comes after dependency installation to optimize caching:
