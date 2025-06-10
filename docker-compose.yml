@@ -12,6 +12,7 @@ volumes:
   searxng-docker_caddy-config: {}
   searxng-docker_caddy-data: {}
   searxng-docker_valkey-data2: {}
+  n8n_data: {}
 
 # Define services
 services:
@@ -130,26 +131,22 @@ services:
     networks:
       - app-network
 
-# --- 6. ComfyUI Service (Stable Diffusion UI) ---
-#comfyui:
- # container_name: comfyui
-  #build:
-   # context: ./comfyui # Tells Docker Compose to build from your local comfyui folder
-    #dockerfile: Dockerfile # Points to the Dockerfile we'll create in comfyui/
- # image: comfyui:latest # Name of the image that will be built
- # platform: linux/arm64 # Or your appropriate platform
- # restart: always
- # ports:
-   # - "8188:8188" # Expose ComfyUI's default port
- # volumes:
-    # Bind mount for generated images to be accessible on host
-   # - ./comfyui/output:/app/ComfyUI/output
-    # Bind mount for all models (checkpoints, loras, vae, upscalers, etc.)
-    # Users will place their models in OPENWEBUI_STACK/comfyui/models on their host
-   # - ./comfyui/models:/app/ComfyUI/models
-    # Bind mount for custom nodes (if you want to manage them on host)
-   # - ./comfyui/custom_nodes:/app/ComfyUI/custom_nodes
-    # Bind mount for input images (if you feed images from host to ComfyUI)
-   # - ./comfyui/input:/app/ComfyUI/input
- # networks:
-   # - app-network # Connects to your main app network
+   # --- 6. n8n Service (Workflow Automation) ---
+  n8n:
+   container_name: n8n
+   image: n8nio/n8n:latest # Using the latest official n8n image
+   platform: linux/arm64 # Assuming your M1 Mac needs arm64 for n8n as well
+   restart: always
+   ports:
+    - "5678:5678" # n8n's default UI port
+   volumes:
+    - n8n_data:/home/node/.n8n # Persistent storage for n8n data (workflows, credentials)
+   environment:
+    - N8N_SECURE_COOKIE=false # For simpler local dev/testing
+    - N8N_HOST=n8n # N8n's hostname within the Docker network for internal communication
+    - N8N_PORT=5678 # N8n's internal port
+    - N8N_PROTOCOL=http # Protocol for internal Docker communication
+    - WEBHOOK_URL=http://localhost:5678
+   networks:
+    - app-network # Connects to your main app network
+
