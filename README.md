@@ -7,6 +7,7 @@ This repository contains a full AI and automation stack orchestrated with Docker
 *   **Tika:** For content extraction.
 *   **TTS Piper:** For text-to-speech capabilities.
 *   **n8n:** A powerful workflow automation tool to connect APIs and automate tasks.
+*   **ComfyUI:** A modular and powerful Stable Diffusion UI for image generation.
 
 This stack is designed to be easily deployed by users with Docker Desktop.
 
@@ -26,22 +27,27 @@ Follow these steps to set up and run the full AI and automation stack on your ma
 ### Project Structure
 
 After cloning, your project directory (`OPENWEBUI_STACK`) will have the following structure:
-
-OPENWEBUI_STACK/ 
 ```
-├── docker-compose.yml # The main Docker Compose orchestration file
+OPENWEBUI_STACK/ 
+├── docker-compose.yml # The main Docker Compose orchestration file 
 ├── hybridreranker/ # Contains Dockerfile and code for the custom reranker 
- ├── Dockerfile  
- ├── inference.py  
- └── requirements.txt 
-├── openedai-speech/ # Configuration and voice models for TTS Piper  
- ├── config/  
- └── voices/  
+ │ ├── Dockerfile 
+ │ ├── inference.py 
+ │ └── requirements.txt 
+├── my_custom_tools/ # Custom tool scripts for Open WebUI 
+ │ └── example_tool.py 
+├── openedai-speech/ # Configuration and voice models for TTS Piper 
+ │ ├── config/ 
+ │ └── voices/ 
 ├── searxng-docker/ # Configuration for SearXNG 
- └── searxng/  
- └── settings.yml 
+ │ └── searxng/ 
+ │ └── settings.yml 
 ├── .env.example # Template for environment variables (e.g., API keys) 
 ├── .gitignore # Specifies files/folders Git should ignore 
+├── comfyui/ # ComfyUI source code (model/output/input/custom_nodes ignored by Git) 
+ │ ├── Dockerfile 
+ │ ├── requirements.txt 
+ │ └── ... (ComfyUI core files) 
 └── README.md # This guide!
 ```
 
@@ -74,7 +80,24 @@ Some services require API keys. The `OPENAI_API_KEY` is used by Open WebUI.
     **Important:** Replace `sk-your-actual-openai-api-key-here` with your real OpenAI API key.
     *   **Security Note:** The `.env` file is excluded from Git by `.gitignore`, so your sensitive information remains local.
 
-### Step 3: Run the Full Stack
+### Step 3: Prepare ComfyUI Data (Important!)
+
+ComfyUI requires large models (e.g., Stable Diffusion checkpoints, Loras, VAEs, Upscalers) which are **not included in this Git repository** due to their size. You will need to download these models separately and place them in the correct local folders.
+
+1.  **Ensure required ComfyUI data directories exist on your host:**
+    Docker Compose will create these if they don't exist, but it's good practice to ensure they're there.
+    ```bash
+    mkdir -p comfyui/models
+    mkdir -p comfyui/output
+    mkdir -p comfyui/input
+    mkdir -p comfyui/custom_nodes # For any custom nodes you download
+    ```
+2.  **Download your desired Stable Diffusion models:**
+    *   For example, you can download `sd_xl_base_1.0.safetensors` from Hugging Face: [https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors)
+    *   **Place your downloaded checkpoint files** (e.g., `.safetensors`, `.ckpt`) into: `OPENWEBUI_STACK/comfyui/models/checkpoints/`
+    *   **Place other model types** (e.g., Loras, VAEs, Upscalers) into their respective subdirectories under `OPENWEBUI_STACK/comfyui/models/`. (ComfyUI typically looks for these automatically).
+
+### Step 4: Run the Full Stack
 
 This command will build any necessary custom images, download external models (like the reranker model from Hugging Face), and start all the services defined in `docker-compose.yml`.
 
@@ -84,18 +107,24 @@ This command will build any necessary custom images, download external models (l
     docker compose up --build -d
     ```
     *   `up`: Starts the services.
-    *   `--build`: This is crucial! It tells Docker Compose to build your custom `hybridreranker` image before starting the containers. During this build, the `BAAI/bge-reranker-v2-m3` model will be downloaded and cached within the image.
+    *   `--build`: This is crucial! It tells Docker Compose to build your custom `hybridreranker` and `comfyui` images before starting the containers. During the `comfyui` build, it will install PyTorch with MPS support.
     *   `-d`: Runs the containers in "detached" mode (in the background), so your terminal remains free. If you want to see all logs directly, remove `-d`.
 
-    Allow some time for Docker to download images, build your custom image, and download the reranker model.
+    Allow some time for Docker to download images, build your custom images, and download any required models within the containers.
 
-### Step 4: Access the Services
+### Step 5: Access the Services
 
 Once the services are up and running, you can access them via your web browser:
 
 *   **Open WebUI:**
     *   Go to: `http://localhost:3000`
     *   **Note on LLM:** Open WebUI is configured to connect to an LLM running on `http://host.docker.internal:1234/v1`. This assumes you have a compatible LLM (like Ollama or a local LLM server) running on your Docker host machine, serving on port `1234`. If you don't, Open WebUI's AI features won't work immediately.
+    *   **ComfyUI Integration (Optional):** This stack includes ComfyUI, but its integration with Open WebUI is not pre-configured via environment variables due to the need for a specific workflow.json file. You can manually set up the connection within Open WebUI settings:
+        *   Navigate to **Settings (gear icon) > Image Generation (Experimental)**.
+        *   Set **Image Generation Engine** to `ComfyUI`.
+        *   For **ComfyUI Base URL**, enter `http://comfyui:8188`
+        *   **Important: You must upload a `workflow.json` file as API format** via the "ComfyUI Workflow" section. You can export an example workflow from ComfyUI itself (e.g., from `http://localhost:8188`) by selecting `Save (API Format)` from the `Save` menu.
+        *   Once a workflow is uploaded, you can then configure the specific node IDs and parameters (Prompt, Model, Width, Height, etc.) directly in Open WebUI's settings.
 *   **SearXNG Search Engine (via Caddy proxy):**
     *   Go to: `http://localhost:8080`
 *   **Tika (Content Extraction):** (Primarily for internal use by Open WebUI if configured for RAG)
@@ -107,8 +136,11 @@ Once the services are up and running, you can access them via your web browser:
 *   **n8n (Workflow Automation):**
     *   Go to: `http://localhost:5678`
     *   On first access, n8n will guide you through creating your first user account. This account will be persistent in the `n8n_data` Docker volume.
+*   **ComfyUI (Stable Diffusion UI):**
+    *   Go to: `http://localhost:8188`
+    *   You can directly access ComfyUI's web interface here to load workflows, generate images, and manage models.
 
-### Step 5: Stop the Services
+### Step 6: Stop the Services
 
 When you're done, you can stop all running containers:
 
@@ -117,9 +149,9 @@ When you're done, you can stop all running containers:
     ```bash
     docker compose down
     ```
-    This will stop and remove the containers and networks. **Your data (e.g., Open WebUI database, SearXNG data, n8n workflows) stored in Docker volumes will be preserved.**
+    This will stop and remove the containers and networks. **Your data (e.g., Open WebUI database, SearXNG data, n8n workflows, ComfyUI output) stored in Docker volumes and bind mounts will be preserved.**
 
-### Step 6: Clean Up (Optional: Delete all data and images)
+### Step 7: Clean Up (Optional: Delete all data and images)
 
 If you want to completely remove all data, containers, networks, and locally built images, use this command:
 
@@ -129,4 +161,4 @@ If you want to completely remove all data, containers, networks, and locally bui
     docker compose down --volumes --rmi local
     ```
     *   `--volumes` (or `-v`): Removes the named Docker volumes, which store your persistent data. **This will delete your data.**
-    *   `--rmi local`: Removes images that do not have a tag, and images that have been built locally (like `re-ranker:latest`).
+    *   `--rmi local`: Removes images that do not have a tag, and images that have been built locally (like `re-ranker:latest`, `comfyui:latest`).
