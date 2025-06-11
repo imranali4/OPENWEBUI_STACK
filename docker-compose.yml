@@ -8,11 +8,14 @@ networks:
 # Define top-level volumes
 # Docker Compose will create these automatically if they don't exist when you run 'docker compose up'
 volumes:
-  open-webui: {}
-  searxng-docker_caddy-config: {}
-  searxng-docker_caddy-data: {}
-  searxng-docker_valkey-data2: {}
-  n8n_data: {}
+  # These volumes were created without a project prefix in your old setup (due to external: true)
+  open-webui: { external: true }
+  searxng-docker_caddy-config: { external: true }
+  searxng-docker_caddy-data: { external: true }
+  searxng-docker_valkey-data2: { external: true }
+  # The n8n volume was created by your old setup as 'open-webui_n8n_data'
+  # We must explicitly refer to it by its full, created name and mark it as external
+  open-webui_n8n_data: { external: true }
 
 # Define services
 services:
@@ -140,7 +143,7 @@ services:
    ports:
     - "5678:5678" # n8n's default UI port
    volumes:
-    - n8n_data:/home/node/.n8n # Persistent storage for n8n data (workflows, credentials)
+    - open-webui_n8n_data:/home/node/.n8n # <--- THIS LINE IS NOW CORRECTLY REFERENCING THE EXISTING VOLUME
    environment:
     - N8N_SECURE_COOKIE=false # For simpler local dev/testing
     - N8N_HOST=n8n # N8n's hostname within the Docker network for internal communication
