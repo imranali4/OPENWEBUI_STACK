@@ -98,7 +98,7 @@ ComfyUI requires large models (e.g., Stable Diffusion checkpoints, Loras, VAEs, 
     mkdir -p ComfyUIcustom_nodes # For any custom nodes you download
     
 2.  **Download your desired Stable Diffusion models:**
-    For example, you can download sd_xl_base_1.0.safetensors from Hugging Face: ([Download])https:huggingface.costabilityaistable-diffusion-xl-base-1.0blobmainsd_xl_base_1.0.safetensors
+    For example, you can download sd_xl_base_1.0.safetensors from Hugging Face: ([Download](https:huggingface.costabilityaistable-diffusion-xl-base-1.0blobmainsd_xl_base_1.0.safetensors))
 3.  Place your downloaded checkpoint files (e.g., .safetensors, .ckpt) into: OPENWEBUI_STACKComfyUImodelscheckpoints
 4.  Place other model types (e.g., Loras, VAEs, Upscalers) into their respective subdirectories under OPENWEBUI_STACKComfyUImodels. (ComfyUI typically looks for these automatically).
   
