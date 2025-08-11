@@ -1,7 +1,7 @@
 cat << EOF > README.md
 # OPENWEBUI_STACK - Comprehensive AI & Automation Stack
   
-This repository contains a full AI and automation stack orchestrated with Docker Compose, featuring:
+This repository contains a full AI and automation stack orchestrated with Docker Compose best for MAC OS M series, featuring:
   
 - Open WebUI: A user-friendly interface for your LLM interactions.
 - BAAIbge-reranker-v2-m3: A powerful hybrid reranker for improved search relevance.
@@ -22,6 +22,7 @@ Follow these concise steps to set up and run the full AI and automation stack on
   
 - **Docker Desktop:** Ensure Docker Desktop is installed and running. ([Download](https:www.docker.comproductsdocker-desktop))
 - **Git:** You'll need Git installed to clone this repository. ([Download](https:git-scm.comdownloads))
+- **LM Studio:** Ensure Docker Desktop is installed and running. ([Download](https://lmstudio.ai))
   
 ### Repository Contents Overview
   
@@ -97,7 +98,7 @@ ComfyUI requires large models (e.g., Stable Diffusion checkpoints, Loras, VAEs, 
     mkdir -p ComfyUIcustom_nodes # For any custom nodes you download
     
 2.  **Download your desired Stable Diffusion models:**
-    For example, you can download sd_xl_base_1.0.safetensors from Hugging Face: https:huggingface.costabilityaistable-diffusion-xl-base-1.0blobmainsd_xl_base_1.0.safetensors
+    For example, you can download sd_xl_base_1.0.safetensors from Hugging Face: ([Download])https:huggingface.costabilityaistable-diffusion-xl-base-1.0blobmainsd_xl_base_1.0.safetensors
 3.  Place your downloaded checkpoint files (e.g., .safetensors, .ckpt) into: OPENWEBUI_STACKComfyUImodelscheckpoints
 4.  Place other model types (e.g., Loras, VAEs, Upscalers) into their respective subdirectories under OPENWEBUI_STACKComfyUImodels. (ComfyUI typically looks for these automatically).
   
