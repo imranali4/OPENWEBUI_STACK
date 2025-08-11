@@ -1,18 +1,8 @@
+.DS_Store
+__pycache__
+*.db
 .env
-venv/
-.venv/
-*.DS_Store
-*.log
-.ipynb_checkpoints/
-__pycache__/
-
-# ComfyUI related ignores
-comfyui/output/
-comfyui/models/
-comfyui/input/
-comfyui/custom_nodes/
-comfyui/README_SETUP.pdf
-
-# Exclude ComfyUI folder from Git tracking (working on it locally)
-comfyui/
-my_custom_tools/
+Miniconda3-latest-MacOSX-arm64.sh
+ComfyUI/output/
+ComfyUI/input/
+ComfyUI/Miniconda3-latest-MacOSX-arm64.sh

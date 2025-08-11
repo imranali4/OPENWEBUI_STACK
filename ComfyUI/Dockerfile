@@ -41,4 +41,4 @@ EXPOSE 8188
 # --port 8188 sets the port
 # --device mps is CRITICAL to tell ComfyUI to use the MPS device,
 # relying on Docker Desktop's underlying translation.
-ENTRYPOINT ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188", "--gpu-only"]
+ENTRYPOINT ["python", "main.py", "--listen", "0.0.0.0", "--port", "8188"]
