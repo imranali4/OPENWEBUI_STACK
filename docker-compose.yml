@@ -1,3 +1,5 @@
+version: '3.8'
+
 # Define top-level networks
 networks:
   app-network:
@@ -10,26 +12,29 @@ volumes:
   searxng-docker_caddy-config:
   searxng-docker_caddy-data:
   searxng-docker_valkey-data2:
-  open-webui_n8n_data:
-
+  n8n_data:
+  comfyui_data: # New volume for ComfyUI persistent data
+  
 # Define services
 services:
   # --- 1. Open WebUI Service ---
   open-webui:
     container_name: open-webui
-    image: ghcr.io/open-webui/open-webui:main
+    image: ghcr.io/open-webui/open-webui:latest
     platform: linux/arm64
     restart: always
     environment:
-      # Remember to define OPENAI_API_KEY in a .env file or your shell
       - OPENAI_API_BASE_URL=http://host.docker.internal:1234/v1
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY} # From .env file
       - WEBUI_SEARCH_ENGINE_URL=http://searxng-caddy:8080/search?q=<query>
-      - WEBUI_VECTOR_STORE=qdrant
       - HOST_GATEWAY_IP=host.docker.internal
+      - WEBUI_TTS_BASE_URL=http://tts-piper:8000 # Pre-configure TTS Piper
+      - WEBUI_TTS_API_PATH=/v1/tts # Pre-configure TTS Piper API path
+      - WEBUI_COMFYUI_BASE_URL=http://comfyui:8188 # Pre-configure ComfyUI
     volumes:
       - open-webui:/app/backend/data
       - ./my_custom_tools:/app/backend/tools # For custom tool scripts (e.g., pipes)
+      # Removed: /Users/imranali/projects:/mnt/projects as it's an absolute host path
     ports:
       - "3000:8080"
     networks:
@@ -53,11 +58,10 @@ services:
   # --- 3. Hybrid Reranker Service ---
   hybridreranker:
     container_name: hybridreranker
-    # This tells Docker Compose to build the 're-ranker:latest' image
-    # from the Dockerfile located in the 'hybridreranker' directory.
+    # This now builds the 're-ranker:latest' image from the Dockerfile in the 'hybridreranker' directory.
     build:
-      context: ./hybridreranker # Points to the directory containing your Dockerfile
-      dockerfile: Dockerfile    # Specifies the Dockerfile name (default is Dockerfile)
+      context: ./hybridreranker
+      dockerfile: Dockerfile
     image: re-ranker:latest # This specifies the name of the image that will be built and used
     platform: linux/arm64
     restart: always
@@ -124,21 +128,55 @@ services:
     networks:
       - app-network
 
-   # --- 6. n8n Service (Workflow Automation) ---
+  # --- 6. n8n server ---
   n8n:
-   container_name: n8n
-   image: n8nio/n8n:latest # Using the latest official n8n image
-   platform: linux/arm64 # Assuming your M1 Mac needs arm64 for n8n as well
-   restart: always
-   ports:
-    - "5678:5678" # n8n's default UI port
-   volumes:
-    - open-webui_n8n_data:/home/node/.n8n # <--- THIS LINE IS NOW CORRECTLY REFERENCING THE EXISTING VOLUME
-   environment:
-    - N8N_SECURE_COOKIE=false # For simpler local dev/testing
-    - N8N_HOST=n8n # N8n's hostname within the Docker network for internal communication
-    - N8N_PORT=5678 # N8n's internal port
-    - N8N_PROTOCOL=http # Protocol for internal Docker communication
-    - WEBHOOK_URL=http://localhost:5678
-   networks:
-    - app-network # Connects to your main app network
+    container_name: n8n
+    image: n8nio/n8n:latest
+    platform: linux/arm64
+    restart: always
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n # Persistent storage for n8n data
+    environment:
+      - N8N_SECURE_COOKIE=false
+      - N8N_HOST=n8n
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678
+    networks:
+      - app-network
+
+  # --- 7. Cloudflare Tunnel Service ---
+  cloudflared:
+    container_name: cloudflared-tunnel
+    image: cloudflare/cloudflared:latest
+    platform: linux/arm64
+    restart: always
+    environment: # Token now pulled from .env for security
+      - CLOUDFLARED_TOKEN=${CLOUDFLARED_TOKEN}
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN} # Use the env var here
+    networks:
+      - app-network
+
+  # --- 8. ComfyUI Service ---
+  comfyui:
+    container_name: comfyui
+    build: # Build the image from your local ComfyUI folder
+      context: ./ComfyUI
+      dockerfile: Dockerfile
+    image: comfyui:latest # Name of the image to be built
+    platform: linux/arm64 # Match your other ARM services
+    restart: always
+    ports:
+      - "8188:8188" # Default ComfyUI UI port
+    volumes:
+      # Persistent storage for ComfyUI's user data, custom nodes, etc.
+      - comfyui_data:/app/ComfyUI/data
+      # Map model/output/input directories from local host (for easy access/management)
+      - ./ComfyUI/models:/app/ComfyUI/models
+      - ./ComfyUI/output:/app/ComfyUI/output
+      - ./ComfyUI/input:/app/ComfyUI/input
+      - ./ComfyUI/custom_nodes:/app/ComfyUI/custom_nodes
+    networks:
+      - app-network
