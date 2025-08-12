@@ -1,4 +1,4 @@
-cat << EOF > README.md
+README.md
 # OPENWEBUI_STACK - Comprehensive AI & Automation Stack
   
 This repository contains a full AI and automation stack orchestrated with Docker Compose best for MAC OS M series, featuring:
